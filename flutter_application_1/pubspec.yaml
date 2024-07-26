@@ -28,3 +28,5 @@ flutter:
     - assets\images\light.jpg
     - assets\images\dark.jpg
     - assets\video\vv.mp4
+    - assets/images/recbtn.png
+    - assets/images/bg.png
