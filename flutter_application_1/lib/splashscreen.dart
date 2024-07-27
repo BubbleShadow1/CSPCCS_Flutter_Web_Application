@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/assets/imageaddress.dart';
+import 'package:flutter_application_1/signup.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 import 'package:video_player_web/video_player_web.dart';
@@ -14,26 +16,17 @@ class splashscreen extends StatefulWidget {
 
 class splashscreenState extends State<splashscreen> {
   late VideoPlayerController _controller;
-  late Future<void> _initializeVideoPlayerFuture;
+  // late Future<void> _initializeVideoPlayerFuture;
 
   @override
   void initState() {
     super.initState();
     _navigateToNextScreen();
 
-    _controller = VideoPlayerController.network('assets/video/vv.mp4');
-    _initializeVideoPlayerFuture = _controller.initialize().then((_) {
-      _controller.setLooping(true);
-      _controller.play();
-    });
-
-    _initializeVideoPlayerFuture.then((_) {
-      print('Video Player Initialized!');
-    });
   }
 
   _navigateToNextScreen() async {
-    await Future.delayed(const Duration(seconds: 3)); // Adjust delay as needed
+    await Future.delayed(const Duration(seconds: 4));
     final isLoggedIn = await _checkLoginStatus();
     if (isLoggedIn) {
       final prefs = await SharedPreferences.getInstance();
@@ -48,14 +41,14 @@ class splashscreenState extends State<splashscreen> {
             twohundred: _getIntFromPrefs(prefs, 'twohundred'),
             fivehundred: _getIntFromPrefs(prefs, 'fivehundred'),
             totalmoney: _getIntFromPrefs(prefs, 'totalmoney'),
-            total: _getIntFromPrefs(prefs, 'total'),
+            total: _getIntFromPrefs(prefs, 'total'),recieptno: _getIntFromPrefs(prefs, 'recieptno') ,
           ),
         ),
       );
-    }else {
+    } else {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => Loginpage()),
+        MaterialPageRoute(builder: (context) => Signup()),
       );
     }
   }
@@ -67,7 +60,9 @@ class splashscreenState extends State<splashscreen> {
       try {
         return int.parse(value);
       } catch (e) {
+
         print('Error parsing integer from SharedPreferences: $e');
+        
         return 0;
       }
     }
@@ -76,31 +71,22 @@ class splashscreenState extends State<splashscreen> {
 
   Future<bool> _checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
-    final loginStatus = prefs.getString('W');
-    return loginStatus == '***********RECIEPT***********' || loginStatus != null;
+    String? username = prefs.getString('username');
+
+    print("$username at splash screen");
+    final loginStatus =
+        prefs.getString('${username}login');
+    return loginStatus == '***********RECIEPT***********' ||
+        loginStatus != null;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: FutureBuilder(
-        future: _initializeVideoPlayerFuture,
+        future: _navigateToNextScreen(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            return Container(decoration: BoxDecoration(color: Colors.white),child:  Center( // Center the video
-              child:SizedBox( height:300,width:300,child: FittedBox(
-                  fit: BoxFit.cover, // Cover the entire area
-                  child: SizedBox(
-                    width: _controller.value.size.width,
-                    height: _controller.value.size.height,
-                    child: VideoPlayer(_controller),
-                  ),
-                ),
-              ),
-            ),);
-          } else {
-            return const Center(child: CircularProgressIndicator());
-          }
+          return Center(child: Image.asset(imageaddress.logo));
         },
       ),
     );
