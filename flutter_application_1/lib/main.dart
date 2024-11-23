@@ -49,6 +49,7 @@ class MainApp extends StatefulWidget {
 
 class MainAppState extends State<MainApp> {
   final RegExp regExp = RegExp(r'^\d+$');
+  final RegExp regforremark = RegExp(r'.');
 
   final _textController10 = TextEditingController();
   final _textController20 = TextEditingController();
@@ -56,6 +57,7 @@ class MainAppState extends State<MainApp> {
   final _textController100 = TextEditingController();
   final _textController200 = TextEditingController();
   final _textController500 = TextEditingController();
+  final _textControllerRemark = TextEditingController();
 
   String value10 = "";
   String value20 = "";
@@ -63,6 +65,7 @@ class MainAppState extends State<MainApp> {
   String value100 = "";
   String value200 = "";
   String value500 = "";
+  String valueRemark = "";
 
   Future<String?> user() async {
     final prefs = await SharedPreferences.getInstance();
@@ -147,7 +150,7 @@ class MainAppState extends State<MainApp> {
                     TextFieldFifty(context),
                     TextFieldTwenty(context),
                     TextFieldTen(context),
-
+                    remarktextfield(),
                     const SizedBox(
                       height: 10,
                       width: 30,
@@ -572,6 +575,8 @@ class MainAppState extends State<MainApp> {
               widget.totalmoney.toString() +
               '\nTotal Available Notes:' +
               widget.total.toString() +
+              '\nRemark:' +
+              valueRemark +
               '\nDate and Time:' +
               formattedDateTime +
               '\n------------------------------\n';
@@ -601,6 +606,7 @@ class MainAppState extends State<MainApp> {
           _textController100.clear();
           _textController200.clear();
           _textController500.clear();
+          _textControllerRemark.clear();
 
           value10 = '0';
           value20 = '0';
@@ -608,12 +614,13 @@ class MainAppState extends State<MainApp> {
           value100 = '0';
           value200 = '0';
           value500 = '0';
+          valueRemark = '.';
         }
       },
       child: const Text('Deposit'),
       style: ElevatedButton.styleFrom(
         textStyle: const TextStyle(
-          fontSize: 30,
+          fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -637,6 +644,7 @@ class MainAppState extends State<MainApp> {
               hundred <= widget.hundred &&
               twohundred <= widget.twohundred &&
               fivehundred <= widget.fivehundred) {
+
             setState(() {
               widget.ten -= ten;
               widget.twenty -= twenty;
@@ -659,18 +667,8 @@ class MainAppState extends State<MainApp> {
                   widget.fivehundred +
                   widget.twohundred;
 
-              _textController10.clear();
-              _textController20.clear();
-              _textController50.clear();
-              _textController100.clear();
-              _textController200.clear();
-              _textController500.clear();
-              value10 = '0';
-              value20 = '0';
-              value50 = '0';
-              value100 = '0';
-              value200 = '0';
-              value500 = '0';
+         
+
             });
 
             int totalwithdrawlnotes =
@@ -707,10 +705,11 @@ class MainAppState extends State<MainApp> {
                 '\nTotal Available Amount:' +
                 widget.totalmoney.toString() +
                 '\nTotal Available Notes:' +
-                widget.total.toString() +
+                widget.total.toString() +'\nRemark:'+valueRemark+
                 '\nDate and Time:' +
                 formattedDateTime +
                 '\n------------------------------\n';
+
             final prefs = await SharedPreferences.getInstance();
             final username = await user();
             print(username);
@@ -728,6 +727,24 @@ class MainAppState extends State<MainApp> {
             await prefs.setString('total', widget.total.toString());
             await prefs.setString('totalmoney', widget.totalmoney.toString());
             await prefs.setString('recieptno', widget.recieptno.toString());
+
+     _textController10.clear();
+              _textController20.clear();
+              _textController50.clear();
+              _textController100.clear();
+              _textController200.clear();
+              _textController500.clear();
+              _textControllerRemark.clear();
+
+              value10 = '0';
+              value20 = '0';
+              value50 = '0';
+              value100 = '0';
+              value200 = '0';
+              value500 = '0';
+              valueRemark = '.';
+
+
           } else {
             //to do
           }
@@ -736,7 +753,7 @@ class MainAppState extends State<MainApp> {
       child: const Text('Withdrawl'),
       style: ElevatedButton.styleFrom(
         textStyle: const TextStyle(
-          fontSize: 30,
+          fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -771,7 +788,8 @@ class MainAppState extends State<MainApp> {
                       await prefs.setString(
                           '${username}login', '***********RECIEPT***********');
                       widget.recieptno = 1;
-                        await prefs.setString('recieptno', widget.recieptno.toString());
+                      await prefs.setString(
+                          'recieptno', widget.recieptno.toString());
                     },
                     child: const Text('Clear'),
                   ),
@@ -789,10 +807,51 @@ class MainAppState extends State<MainApp> {
       },
       style: ElevatedButton.styleFrom(
           textStyle: const TextStyle(
-        fontSize: 30,
+        fontSize: 20,
         fontWeight: FontWeight.bold,
       )),
       child: const Text('Reciept'),
+    );
+  }
+
+  Widget remarktextfield() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Flexible(
+          flex: 1,
+          child: Padding(
+              padding: EdgeInsets.only(left:10,right: 10 ),
+              child: Text('Remark',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
+        ),
+        Flexible(
+            flex: 1,
+            child: Padding(
+                padding: const EdgeInsets.only(left: 10,right: 10),
+                child: TextFormField(
+                  controller: _textControllerRemark,
+                  onChanged: (value) {
+                    setState(() {
+                      valueRemark = value.isEmpty ? '.' : value;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      valueRemark = '.';
+                      return null;
+                    } else if (!regforremark.hasMatch(value)) {
+                      return "Invalid Input Format";
+                    }
+                  },
+                  maxLength: 500,
+                  decoration: const InputDecoration(
+                    labelText: 'Enter your Remark',
+                    contentPadding: EdgeInsets.all(10),
+                    hintText: 'Enter here....',
+                  ),
+                ))),
+      ],
     );
   }
 }
