@@ -54,7 +54,7 @@ class _HomePageState extends State<HomePage> {
         total: widget.total,
         recieptno: widget.recieptno,
       ),
-      EntryListPage(bloc: EntryBloc()), 
+     Pendingpage(bloc: EntryBloc()), 
     ];
   }
 
