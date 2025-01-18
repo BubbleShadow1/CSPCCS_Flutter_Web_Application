@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "540296280921",
+    "firebase_url": "https://ccscsp-4ecc2-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "ccscsp-4ecc2",
+    "storage_bucket": "ccscsp-4ecc2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:540296280921:android:c6bd52d7f9cf75c71eea48",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_1"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "540296280921-2ebpf6om86gs6o7s4s1j2vvpkciequjl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.flutter_application_1",
+            "certificate_hash": "f2c4a790e5d9135ef0e5f1e7e2c35cd72fe2e106"
+          }
+        },
+        {
+          "client_id": "540296280921-2as3hns78ik3767lcd0ni3umi6u63520.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAXVe_ldN8t_EYwjpb3Sle7KBeI4475awE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "540296280921-2as3hns78ik3767lcd0ni3umi6u63520.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

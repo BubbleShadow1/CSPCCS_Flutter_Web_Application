@@ -1,21 +1,47 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_application_1/Authentication/auth_repository.dart';
+import 'package:flutter_application_1/Authentication/authbloc/auth_bloc.dart';
 import 'package:flutter_application_1/Theme/appcolors.dart';
 import 'package:flutter_application_1/Theme/theme.dart';
 import 'package:flutter_application_1/assets/imageaddress.dart';
 import 'package:flutter_application_1/dev.dart';
-import 'package:flutter_application_1/loginpage.dart';
+import 'package:flutter_application_1/firebasedatabase/bloc/event.dart';
+import 'package:flutter_application_1/firebasedatabase/bloc/state.dart';
+import 'package:flutter_application_1/firebasedatabase/bloc/storedatabloc.dart';
+import 'package:flutter_application_1/firebasedatabase/firebaserepo.dart';
+import 'package:flutter_application_1/firebaseoptions.dart';
 import 'package:flutter_application_1/signup.dart';
 import 'package:flutter_application_1/splashscreen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal_html/html.dart' as html;
 
-void main() {
-  runApp(MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: splashscreen(),
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  // Pass all uncaught errors from the framework to Crashlytics.
+
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
+  runApp(MultiBlocProvider(
+    providers: [
+      BlocProvider<AuthBloc>(
+        create: (context) => AuthBloc(AuthRepository()),
+      ),
+      BlocProvider<FirebaseBloc>(
+          create: (context) => FirebaseBloc(FirebaseRepository())),
+    ],
+    child: const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: SplashScreen(),
+    ),
   ));
 }
 
@@ -67,6 +93,8 @@ class MainAppState extends State<MainApp> {
   String value500 = "";
   String valueRemark = "";
 
+  String fetchedrecipt = "";
+
   Future<String?> user() async {
     final prefs = await SharedPreferences.getInstance();
     String? username = prefs.getString('username');
@@ -95,96 +123,125 @@ class MainAppState extends State<MainApp> {
     //
     // print('bodyimage');
 
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: theme,
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Center(
-            child: Text(
-              'Make Your Record',
-              style: TextStyle(
-                  fontWeight: FontWeight.bold, color: appcolors.primarycolor),
-            ),
-          ),
-          actions: [
-            PopupMenuButton<VoidCallback>(onSelected: (callback) {
-              callback();
-            }, itemBuilder: (context) {
-              return [
-                PopupMenuItem(
-                  child: const Text('Developer contact'),
-                  value: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => dev()));
-                  },
+    return BlocListener<FirebaseBloc, FirebaseState>(
+        listener: (context, state) {
+          if (state is FirebaseLoading) {
+          } else if (state is UsersFetchedState) {
+            final data = state.users;
+
+            if (data != null && data.isNotEmpty) {
+              final user = data
+                  .last; // Assuming `data` is a list and you need the first user's data
+              setState(() {
+                fetchedrecipt = user['remark'];
+              });
+            }
+
+            ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+              const SnackBar(content: Text("Data fetched successfully!")),
+            );
+          } else if (state is FirebaseSuccess) {
+            ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+              const SnackBar(content: Text("Data stored successfully!")),
+            );
+          } else if (state is FirebaseError) {
+            ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+              SnackBar(content: Text("Error: ${state.message}")),
+            );
+          }
+        },
+        child: Scaffold(
+            appBar: AppBar(
+              title: const Center(
+                child: Text(
+                  'Make Your Record',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: appcolors.primarycolor),
                 ),
-                PopupMenuItem(
-                    child: const Text('log Out'),
-                    value: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => Loginpage()),
-                      );
-                    })
-              ];
-            })
-          ],
-        ),
-        body: Form(
-          autovalidateMode: AutovalidateMode.always,
-          key: _formkey,
-          child: SingleChildScrollView(
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                    image: AssetImage(bodyimage), fit: BoxFit.cover),
               ),
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    UpperHeading(context),
-                    TextFieldFiveHundred(context),
-                    TextFieldTwoHundred(context),
-                    TextFieldHundred(context),
-                    TextFieldFifty(context),
-                    TextFieldTwenty(context),
-                    TextFieldTen(context),
-                    remarktextfield(),
-                    const SizedBox(
-                      height: 10,
-                      width: 30,
+              actions: [
+                PopupMenuButton<VoidCallback>(onSelected: (callback) {
+                  callback();
+                }, itemBuilder: (context) {
+                  return [
+                    PopupMenuItem(
+                      child: const Text('Developer contact'),
+                      value: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const dev()));
+                      },
                     ),
-                    Row(
+                    PopupMenuItem(
+                        child: const Text('log Out'),
+                        value: () {
+                          //To do add firebase logout .
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const Signup()),
+                          );
+                        })
+                  ];
+                })
+              ],
+            ),
+            body: Form(
+              autovalidateMode: AutovalidateMode.always,
+              key: _formkey,
+              child: SingleChildScrollView(
+                child: Container(
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                        image: AssetImage(bodyimage), fit: BoxFit.cover),
+                  ),
+                  child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        DepositBtn(context),
+                        UpperHeading(context),
+                        TextFieldFiveHundred(context),
+                        TextFieldTwoHundred(context),
+                        TextFieldHundred(context),
+                        TextFieldFifty(context),
+                        TextFieldTwenty(context),
+                        TextFieldTen(context),
+                        remarktextfield(),
                         const SizedBox(
-                          height: 30,
+                          height: 10,
                           width: 30,
                         ),
-                        WithdrawlBtn(context),
-                        const SizedBox(
-                          height: 30,
-                          width: 30,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            DepositBtn(context),
+                            const SizedBox(
+                              height: 30,
+                              width: 30,
+                            ),
+                            WithdrawlBtn(context),
+                            const SizedBox(
+                              height: 30,
+                              width: 30,
+                            ),
+                            ReciptBtn(context),
+                          ],
                         ),
-                        ReciptBtn(context),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    // const Center(child:Text('Developed by Kaushal Kishore sharma \nContact me on: shadowcode007@gmail.com',style: TextStyle(color: Colors.black,fontSize: 30,fontWeight: FontWeight.bold),))
-                  ]),
+                        const SizedBox(height: 20),
+                        // const Center(child:Text('Developed by Kaushal Kishore sharma \nContact me on: shadowcode007@gmail.com',style: TextStyle(color: Colors.black,fontSize: 30,fontWeight: FontWeight.bold),))
+                      ]),
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-    );
+        );
   }
 
   void saveData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final data = prefs.getString('${user()}login');
-    final bytes = utf8.encode(data!);
+    // final prefs = await SharedPreferences.getInstance();
+    // final data = prefs.getString('${user()}login');
+    final bytes = utf8.encode(fetchedrecipt);
     final blob = html.Blob([bytes]);
     final url = html.Url.createObjectUrlFromBlob(blob);
     final anchor = html.AnchorElement()
@@ -227,7 +284,7 @@ class MainAppState extends State<MainApp> {
         Flexible(
           child: Text(
             widget.total.toString(),
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
         )
       ],
@@ -263,6 +320,7 @@ class MainAppState extends State<MainApp> {
                     } else if (!regExp.hasMatch(value)) {
                       return "Invalid Input Format"; // Only validate if not empty
                     }
+                    return null;
                   },
                   maxLength: 10,
                   decoration: const InputDecoration(
@@ -306,9 +364,10 @@ class MainAppState extends State<MainApp> {
                     if (value == null || value.isEmpty) {
                       value20 = '0';
                       return null;
-                    } else if (value != null && !regExp.hasMatch(value)) {
+                    } else if (!regExp.hasMatch(value)) {
                       return "Invalid Input Format";
                     }
+                    return null;
                   },
                   maxLength: 10,
                   decoration: const InputDecoration(
@@ -318,9 +377,10 @@ class MainAppState extends State<MainApp> {
                   ),
                 ))),
         Padding(
-            padding: EdgeInsets.all(10),
+            padding: const EdgeInsets.all(10),
             child: Text(widget.twenty.toString(),
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
+                style: const TextStyle(
+                    fontSize: 20, fontWeight: FontWeight.bold))),
       ],
     );
   }
@@ -331,9 +391,9 @@ class MainAppState extends State<MainApp> {
       children: [
         const Flexible(
           flex: 1,
-          child: const Padding(
+          child: Padding(
               padding: EdgeInsets.all(10),
-              child: const Text('50',
+              child: Text('50',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
         ),
         Flexible(
@@ -351,9 +411,10 @@ class MainAppState extends State<MainApp> {
                     if (value == null || value.isEmpty) {
                       value50 = '0';
                       return null;
-                    } else if (value != null && !regExp.hasMatch(value)) {
+                    } else if (!regExp.hasMatch(value)) {
                       return "Invalid Input Format";
                     }
+                    return null;
                   },
                   maxLength: 10,
                   decoration: const InputDecoration(
@@ -363,9 +424,10 @@ class MainAppState extends State<MainApp> {
                   ),
                 ))),
         Padding(
-            padding: EdgeInsets.all(10),
+            padding: const EdgeInsets.all(10),
             child: Text(widget.fifty.toString(),
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
+                style: const TextStyle(
+                    fontSize: 20, fontWeight: FontWeight.bold))),
       ],
     );
   }
@@ -376,9 +438,9 @@ class MainAppState extends State<MainApp> {
       children: [
         const Flexible(
           flex: 1,
-          child: const Padding(
+          child: Padding(
               padding: EdgeInsets.all(10),
-              child: const Text('100',
+              child: Text('100',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
         ),
         Flexible(
@@ -396,9 +458,10 @@ class MainAppState extends State<MainApp> {
                     if (value == null || value.isEmpty) {
                       value100 = '0';
                       return null;
-                    } else if (value != null && !regExp.hasMatch(value)) {
+                    } else if (!regExp.hasMatch(value)) {
                       return "Invalid Input Format"; // Only validate if not empty
                     }
+                    return null;
                   },
                   maxLength: 10,
                   decoration: const InputDecoration(
@@ -408,9 +471,10 @@ class MainAppState extends State<MainApp> {
                   ),
                 ))),
         Padding(
-            padding: EdgeInsets.all(10),
+            padding: const EdgeInsets.all(10),
             child: Text(widget.hundred.toString(),
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
+                style: const TextStyle(
+                    fontSize: 20, fontWeight: FontWeight.bold))),
       ],
     );
   }
@@ -421,9 +485,9 @@ class MainAppState extends State<MainApp> {
       children: [
         const Flexible(
           flex: 1,
-          child: const Padding(
+          child: Padding(
               padding: EdgeInsets.all(10),
-              child: const Text('200',
+              child: Text('200',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
         ),
         Flexible(
@@ -441,9 +505,10 @@ class MainAppState extends State<MainApp> {
                     if (value == null || value.isEmpty) {
                       value200 = '0';
                       return null;
-                    } else if (value != null && !regExp.hasMatch(value)) {
+                    } else if (!regExp.hasMatch(value)) {
                       return "Invalid Input Format"; // Only validate if not empty
                     }
+                    return null;
                   },
                   maxLength: 10,
                   decoration: const InputDecoration(
@@ -453,9 +518,10 @@ class MainAppState extends State<MainApp> {
                   ),
                 ))),
         Padding(
-            padding: EdgeInsets.all(10),
+            padding: const EdgeInsets.all(10),
             child: Text(widget.twohundred.toString(),
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
+                style: const TextStyle(
+                    fontSize: 20, fontWeight: FontWeight.bold))),
       ],
     );
   }
@@ -486,9 +552,10 @@ class MainAppState extends State<MainApp> {
                     if (value == null || value.isEmpty) {
                       value500 = '0';
                       return null;
-                    } else if (value != null && !regExp.hasMatch(value)) {
+                    } else if (!regExp.hasMatch(value)) {
                       return "Invalid Input Format"; // Only validate if not empty
                     }
+                    return null;
                   },
                   maxLength: 10,
                   decoration: const InputDecoration(
@@ -554,32 +621,8 @@ class MainAppState extends State<MainApp> {
           DateFormat formatter = DateFormat('dd-MM-yyyy HH:mm:ss');
           String formattedDateTime = formatter.format(now);
 
-          String t = '\nDeposit:' +
-              widget.recieptno.toString() +
-              '\nTotal notes(w):' +
-              '500->' +
-              fivehundred.toString() +
-              '|200->' +
-              twohundred.toString() +
-              '|100->' +
-              hundred.toString() +
-              '|50->' +
-              fifty.toString() +
-              '|20->' +
-              twenty.toString() +
-              '|10->' +
-              ten.toString() +
-              '\nTotal Deposit Amount:' +
-              totalDepositAmount.toString() +
-              '\nTotal Available Amount:' +
-              widget.totalmoney.toString() +
-              '\nTotal Available Notes:' +
-              widget.total.toString() +
-              '\nRemark:' +
-              valueRemark +
-              '\nDate and Time:' +
-              formattedDateTime +
-              '\n------------------------------\n';
+          String t =
+              '\nDeposit:${widget.recieptno}\nTotal notes(w):500->$fivehundred|200->$twohundred|100->$hundred|50->$fifty|20->$twenty|10->$ten\nTotal Deposit Amount:$totalDepositAmount\nTotal Available Amount:${widget.totalmoney}\nTotal Available Notes:${widget.total}\nRemark:$valueRemark\nDate and Time:$formattedDateTime\n------------------------------\n';
 
           final prefs = await SharedPreferences.getInstance();
           final username = await user();
@@ -600,6 +643,8 @@ class MainAppState extends State<MainApp> {
           await prefs.setString('totalmoney', widget.totalmoney.toString());
           await prefs.setString('recieptno', widget.recieptno.toString());
 
+ String? rec =await prefs.getString('recieptno');
+
           _textController10.clear();
           _textController20.clear();
           _textController50.clear();
@@ -615,15 +660,30 @@ class MainAppState extends State<MainApp> {
           value200 = '0';
           value500 = '0';
           valueRemark = '.';
+
+          Map<String, dynamic> data = {
+            'ten': ten,
+            'twenty': twenty,
+            'fifty': fifty,
+            'hundred': hundred,
+            'twohundred': twohundred,
+            'fivehundred': fivehundred,
+            'total': totalDepositnotes,
+            'totalMoney': totalDepositAmount,
+            'recieptno': rec,
+            'remark': tt,  'createdAt': FieldValue.serverTimestamp()
+          };
+
+          BlocProvider.of<FirebaseBloc>(context).add(AddDataEvent(data));
         }
       },
-      child: const Text('Deposit'),
       style: ElevatedButton.styleFrom(
         textStyle: const TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
       ),
+      child: const Text('Deposit'),
     );
   }
 
@@ -644,7 +704,6 @@ class MainAppState extends State<MainApp> {
               hundred <= widget.hundred &&
               twohundred <= widget.twohundred &&
               fivehundred <= widget.fivehundred) {
-
             setState(() {
               widget.ten -= ten;
               widget.twenty -= twenty;
@@ -666,9 +725,6 @@ class MainAppState extends State<MainApp> {
                   widget.hundred +
                   widget.fivehundred +
                   widget.twohundred;
-
-         
-
             });
 
             int totalwithdrawlnotes =
@@ -685,37 +741,19 @@ class MainAppState extends State<MainApp> {
             DateFormat formatter = DateFormat('dd-MM-yyyy HH:mm:ss');
             String formattedDateTime = formatter.format(now);
 
-            String t = '\nWithdrawl:' +
-                widget.recieptno.toString() +
-                '\nTotal notes(w):' +
-                '500->' +
-                fivehundred.toString() +
-                '|200->' +
-                twohundred.toString() +
-                '|100->' +
-                hundred.toString() +
-                '|50->' +
-                fifty.toString() +
-                '|20->' +
-                twenty.toString() +
-                '|10->' +
-                ten.toString() +
-                '\nTotal Withdrawl Amount:' +
-                totalWithdrawlAmount.toString() +
-                '\nTotal Available Amount:' +
-                widget.totalmoney.toString() +
-                '\nTotal Available Notes:' +
-                widget.total.toString() +'\nRemark:'+valueRemark+
-                '\nDate and Time:' +
-                formattedDateTime +
-                '\n------------------------------\n';
+            String t =
+                '\nWithdrawl:${widget.recieptno}\nTotal notes(w):500->$fivehundred|200->$twohundred|100->$hundred|50->$fifty|20->$twenty|10->$ten\nTotal Withdrawl Amount:$totalWithdrawlAmount\nTotal Available Amount:${widget.totalmoney}\nTotal Available Notes:${widget.total}\nRemark:$valueRemark\nDate and Time:$formattedDateTime\n------------------------------\n';
 
             final prefs = await SharedPreferences.getInstance();
             final username = await user();
             print(username);
             final withdrawlrecord = prefs.getString('${username}login');
+
+//total updated reciept
             String tt = withdrawlrecord.toString() + t;
+
             prefs.setString('${username}login', tt);
+
             widget.recieptno++;
 
             await prefs.setString('ten', widget.ten.toString());
@@ -728,41 +766,57 @@ class MainAppState extends State<MainApp> {
             await prefs.setString('totalmoney', widget.totalmoney.toString());
             await prefs.setString('recieptno', widget.recieptno.toString());
 
-     _textController10.clear();
-              _textController20.clear();
-              _textController50.clear();
-              _textController100.clear();
-              _textController200.clear();
-              _textController500.clear();
-              _textControllerRemark.clear();
+            String? rec =await prefs.getString('recieptno');
 
-              value10 = '0';
-              value20 = '0';
-              value50 = '0';
-              value100 = '0';
-              value200 = '0';
-              value500 = '0';
-              valueRemark = '.';
+            _textController10.clear();
+            _textController20.clear();
+            _textController50.clear();
+            _textController100.clear();
+            _textController200.clear();
+            _textController500.clear();
+            _textControllerRemark.clear();
 
+            value10 = '0';
+            value20 = '0';
+            value50 = '0';
+            value100 = '0';
+            value200 = '0';
+            value500 = '0';
+            valueRemark = '.';
+            Map<String, dynamic> data = {
+              'ten': ten,
+              'twenty': twenty,
+              'fifty': fifty,
+              'hundred': hundred,
+              'twohundred': twohundred,
+              'fivehundred': fivehundred,
+              'total': totalwithdrawlnotes,
+              'totalMoney': totalWithdrawlAmount,
+              'recieptno': rec,
+              'remark': tt,  'createdAt': FieldValue.serverTimestamp()
+            };
 
+            BlocProvider.of<FirebaseBloc>(context).add(AddDataEvent(data));
           } else {
             //to do
           }
         }
       },
-      child: const Text('Withdrawl'),
       style: ElevatedButton.styleFrom(
         textStyle: const TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
       ),
+      child: const Text('Withdrawl'),
     );
   }
 
   Widget ReciptBtn(BuildContext context) {
     return ElevatedButton(
       onPressed: () async {
+        BlocProvider.of<FirebaseBloc>(context).add(FetchUsersEvent());
+
         final prefs = await SharedPreferences.getInstance();
         final username = await user();
         print(username);
@@ -775,24 +829,27 @@ class MainAppState extends State<MainApp> {
               return AlertDialog(
                 title: const Text('Reciept'),
                 content: SingleChildScrollView(
-                  child: Text(ss.toString()),
+                  child: Text(
+                      //
+                      fetchedrecipt),
                 ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
                     child: const Text('OK'),
                   ),
-                  TextButton(
-                    onPressed: () async {
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.setString(
-                          '${username}login', '***********RECIEPT***********');
-                      widget.recieptno = 1;
-                      await prefs.setString(
-                          'recieptno', widget.recieptno.toString());
-                    },
-                    child: const Text('Clear'),
-                  ),
+                  // TextButton(
+                  //   onPressed: () async {
+                  //     final prefs = await SharedPreferences.getInstance();
+                  //     await prefs.setString(
+                  //         '${username}login', '***********RECIEPT***********');
+
+                  //     widget.recieptno = 1;
+                  //     await prefs.setString(
+                  //         'recieptno', widget.recieptno.toString());
+                  //   },
+                  //   child: const Text('Clear'),
+                  // ),
                   TextButton(
                     onPressed: () {
                       saveData();
@@ -821,14 +878,14 @@ class MainAppState extends State<MainApp> {
         const Flexible(
           flex: 1,
           child: Padding(
-              padding: EdgeInsets.only(left:10,right: 10 ),
+              padding: EdgeInsets.only(left: 10, right: 10),
               child: Text('Remark',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
         ),
         Flexible(
             flex: 1,
             child: Padding(
-                padding: const EdgeInsets.only(left: 10,right: 10),
+                padding: const EdgeInsets.only(left: 10, right: 10),
                 child: TextFormField(
                   controller: _textControllerRemark,
                   onChanged: (value) {
@@ -843,6 +900,7 @@ class MainAppState extends State<MainApp> {
                     } else if (!regforremark.hasMatch(value)) {
                       return "Invalid Input Format";
                     }
+                    return null;
                   },
                   maxLength: 500,
                   decoration: const InputDecoration(
@@ -855,3 +913,4 @@ class MainAppState extends State<MainApp> {
     );
   }
 }
+
