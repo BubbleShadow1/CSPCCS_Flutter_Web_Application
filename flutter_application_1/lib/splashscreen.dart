@@ -102,6 +102,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/assets/imageaddress.dart';
+import 'package:flutter_application_1/homepage.dart';
 import 'package:flutter_application_1/signup.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_application_1/main.dart';
@@ -136,7 +137,7 @@ class SplashScreenState extends State<SplashScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => MainApp(
+          builder: (context) => HomePage(
             ten: prefs.getInt('ten') ?? 0,
             twenty: prefs.getInt('twenty') ?? 0,
             fifty: prefs.getInt('fifty') ?? 0,

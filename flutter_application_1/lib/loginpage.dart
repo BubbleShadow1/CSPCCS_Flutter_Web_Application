@@ -4,6 +4,7 @@ import 'package:flutter_application_1/firebasedatabase/bloc/event.dart';
 import 'package:flutter_application_1/firebasedatabase/bloc/state.dart';
 import 'package:flutter_application_1/firebasedatabase/bloc/storedatabloc.dart';
 import 'package:flutter_application_1/firebasedatabase/firebaserepo.dart';
+import 'package:flutter_application_1/homepage.dart';
 import 'package:flutter_application_1/main.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -396,7 +397,7 @@ class LoginpageState extends State<Loginpage> {
 BlocProvider.of<FirebaseBloc>(context).add(AddDataEvent(data));
  
 
-            Navigator.push(context, MaterialPageRoute(builder:(context)=>MainApp(ten:ten, twenty: twenty, fifty: fifty, hundred: hundred, twohundred: twohundred, fivehundred: fivehundred, totalmoney: totalMoney, total: total, recieptno: 1) ));
+            Navigator.push(context, MaterialPageRoute(builder:(context)=>HomePage(ten:ten, twenty: twenty, fifty: fifty, hundred: hundred, twohundred: twohundred, fivehundred: fivehundred, totalmoney: totalMoney, total: total, recieptno: 1) ));
 
         }
       },

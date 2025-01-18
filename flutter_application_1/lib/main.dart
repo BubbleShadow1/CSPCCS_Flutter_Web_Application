@@ -5,6 +5,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Authentication/auth_repository.dart';
 import 'package:flutter_application_1/Authentication/authbloc/auth_bloc.dart';
+import 'package:flutter_application_1/Bloc/PendingBloc/bloc.dart';
 import 'package:flutter_application_1/Theme/appcolors.dart';
 import 'package:flutter_application_1/Theme/theme.dart';
 import 'package:flutter_application_1/assets/imageaddress.dart';
@@ -37,6 +38,11 @@ Future<void> main() async {
       ),
       BlocProvider<FirebaseBloc>(
           create: (context) => FirebaseBloc(FirebaseRepository())),
+
+
+            BlocProvider<EntryBloc>(
+          create: (context) => EntryBloc())
+          
     ],
     child: const MaterialApp(
       debugShowCheckedModeBanner: false,
