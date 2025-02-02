@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Bloc/PendingBloc/bloc.dart';
 import 'package:flutter_application_1/main.dart';
+import 'package:flutter_application_1/otherpaymentspage.dart';
 import 'package:flutter_application_1/pendingpage.dart';
 
 class HomePage extends StatefulWidget {
@@ -15,7 +16,7 @@ class HomePage extends StatefulWidget {
   final int recieptno;
 
   const HomePage({
-    Key? key,
+    super.key,
     required this.ten,
     required this.twenty,
     required this.fifty,
@@ -25,7 +26,7 @@ class HomePage extends StatefulWidget {
     required this.totalmoney,
     required this.total,
     required this.recieptno,
-  }) : super(key: key);
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -55,6 +56,7 @@ class _HomePageState extends State<HomePage> {
         recieptno: widget.recieptno,
       ),
      Pendingpage(bloc: EntryBloc()), 
+    const Otherpaymentspage()
     ];
   }
 
@@ -79,6 +81,10 @@ class _HomePageState extends State<HomePage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.list),
             label: 'Pending List',
+          ),
+           BottomNavigationBarItem(
+            icon: Icon(Icons.monetization_on),
+            label: 'Other Transactions',
           ),
         ],
       ),

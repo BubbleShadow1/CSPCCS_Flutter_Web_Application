@@ -102,11 +102,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/assets/imageaddress.dart';
-import 'package:flutter_application_1/homepage.dart';
 import 'package:flutter_application_1/signup.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_application_1/main.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -129,34 +125,34 @@ class SplashScreenState extends State<SplashScreen> {
     // Show splash image for 2 seconds
     await Future.delayed(const Duration(seconds: 2));
 
-    final user = FirebaseAuth.instance.currentUser;
+    // final user = FirebaseAuth.instance.currentUser;
 
-    if (user != null) {
-      // If user is logged in, navigate to MainApp
-      final prefs = await SharedPreferences.getInstance();
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => HomePage(
-            ten: prefs.getInt('ten') ?? 0,
-            twenty: prefs.getInt('twenty') ?? 0,
-            fifty: prefs.getInt('fifty') ?? 0,
-            hundred: prefs.getInt('hundred') ?? 0,
-            twohundred: prefs.getInt('twohundred') ?? 0,
-            fivehundred: prefs.getInt('fivehundred') ?? 0,
-            totalmoney: prefs.getInt('totalmoney') ?? 0,
-            total: prefs.getInt('total') ?? 0,
-            recieptno: prefs.getInt('recieptno') ?? 0,
-          ),
-        ),
-      );
-    } else {
+    // if (user != null) {
+    //   // If user is logged in, navigate to MainApp
+    //   final prefs = await SharedPreferences.getInstance();
+    //   Navigator.pushReplacement(
+    //     context,
+    //     MaterialPageRoute(
+    //       builder: (context) => HomePage(
+    //         ten: prefs.getInt('ten') ?? 0,
+    //         twenty: prefs.getInt('twenty') ?? 0,
+    //         fifty: prefs.getInt('fifty') ?? 0,
+    //         hundred: prefs.getInt('hundred') ?? 0,
+    //         twohundred: prefs.getInt('twohundred') ?? 0,
+    //         fivehundred: prefs.getInt('fivehundred') ?? 0,
+    //         totalmoney: prefs.getInt('totalmoney') ?? 0,
+    //         total: prefs.getInt('total') ?? 0,
+    //         recieptno: prefs.getInt('recieptno') ?? 0,
+    //       ),
+    //     ),
+    //   );
+    // } else {
       // If user is not logged in, navigate to Signup page
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) =>  const Signup()),
       );
-    }
+    // }
   }
 
   @override

@@ -28,7 +28,6 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  // Pass all uncaught errors from the framework to Crashlytics.
 
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
   runApp(MultiBlocProvider(
@@ -38,11 +37,7 @@ Future<void> main() async {
       ),
       BlocProvider<FirebaseBloc>(
           create: (context) => FirebaseBloc(FirebaseRepository())),
-
-
-            BlocProvider<EntryBloc>(
-          create: (context) => EntryBloc())
-          
+      BlocProvider<EntryBloc>(create: (context) => EntryBloc())
     ],
     child: const MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -107,141 +102,146 @@ class MainAppState extends State<MainApp> {
     return username;
   }
 
+  Future<String?> fetchdatafromprefs(String str) async {
+    final prefs = await SharedPreferences.getInstance();
+    String? username = prefs.getString(str);
+    return username;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    calldatafrombackend();
+  }
+
+  void calldatafrombackend() {
+    BlocProvider.of<FirebaseBloc>(context).add(FetchUsersEvent());
+  }
+
   final _formkey = GlobalKey<FormState>();
   @override
   Widget build(BuildContext context) {
     String bodyimage = imageaddress.light;
     ThemeData theme = themeslist.lighttheme;
 
-    // void changeimageandthemedark() {
-    //   setState(() {
-    //     theme = themeslist.darktheme;
-    //     bodyimage = imageaddress().dark;
-    //   });
-    // }
-
-    // void changeimageandthemelight() {
-    //   setState(() {
-    //     theme = themeslist.lighttheme;
-    //     bodyimage = imageaddress().light;
-    //   });
-    // }
-    //
-    // print('bodyimage');
-
     return BlocListener<FirebaseBloc, FirebaseState>(
-        listener: (context, state) {
-          if (state is FirebaseLoading) {
-          } else if (state is UsersFetchedState) {
-            final data = state.users;
+      listener: (context, state) {
+        if (state is FirebaseLoading) {
+        } else if (state is UsersFetchedState) {
+          final data = state.users;
 
-            if (data != null && data.isNotEmpty) {
-              final user = data
-                  .last; // Assuming `data` is a list and you need the first user's data
-              setState(() {
-                fetchedrecipt = user['remark'];
-              });
-            }
-
-            ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-              const SnackBar(content: Text("Data fetched successfully!")),
-            );
-          } else if (state is FirebaseSuccess) {
-            ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-              const SnackBar(content: Text("Data stored successfully!")),
-            );
-          } else if (state is FirebaseError) {
-            ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-              SnackBar(content: Text("Error: ${state.message}")),
-            );
+          if (data.isNotEmpty) {
+            final user = data
+                .last; // Assuming `data` is a list and you need the first user's data
+            setState(() {
+              fetchedrecipt = user['remark'];
+              widget.ten = user['ten'];
+              widget.twenty = user['twenty'];
+              widget.fifty = user['fifty'];
+              widget.hundred = user['hundred'];
+              widget.twohundred = user['twohundred'];
+              widget.fivehundred = user['fivehundred'];
+              widget.totalmoney = user['totalmoney'];
+              widget.total = user['total'];
+              widget.recieptno = user['recieptno'];
+            });
           }
-        },
-        child: Scaffold(
-            appBar: AppBar(
-              title: const Center(
-                child: Text(
-                  'Make Your Record',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: appcolors.primarycolor),
-                ),
-              ),
-              actions: [
-                PopupMenuButton<VoidCallback>(onSelected: (callback) {
-                  callback();
-                }, itemBuilder: (context) {
-                  return [
-                    PopupMenuItem(
-                      child: const Text('Developer contact'),
-                      value: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const dev()));
-                      },
-                    ),
-                    PopupMenuItem(
-                        child: const Text('log Out'),
-                        value: () {
-                          //To do add firebase logout .
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const Signup()),
-                          );
-                        })
-                  ];
-                })
-              ],
-            ),
-            body: Form(
-              autovalidateMode: AutovalidateMode.always,
-              key: _formkey,
-              child: SingleChildScrollView(
-                child: Container(
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                        image: AssetImage(bodyimage), fit: BoxFit.cover),
-                  ),
-                  child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        UpperHeading(context),
-                        TextFieldFiveHundred(context),
-                        TextFieldTwoHundred(context),
-                        TextFieldHundred(context),
-                        TextFieldFifty(context),
-                        TextFieldTwenty(context),
-                        TextFieldTen(context),
-                        remarktextfield(),
-                        const SizedBox(
-                          height: 10,
-                          width: 30,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            DepositBtn(context),
-                            const SizedBox(
-                              height: 30,
-                              width: 30,
-                            ),
-                            WithdrawlBtn(context),
-                            const SizedBox(
-                              height: 30,
-                              width: 30,
-                            ),
-                            ReciptBtn(context),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        // const Center(child:Text('Developed by Kaushal Kishore sharma \nContact me on: shadowcode007@gmail.com',style: TextStyle(color: Colors.black,fontSize: 30,fontWeight: FontWeight.bold),))
-                      ]),
-                ),
-              ),
+
+          ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+            const SnackBar(content: Text("Data fetched successfully!")),
+          );
+        } else if (state is FirebaseSuccess) {
+          ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+            const SnackBar(content: Text("Data stored successfully!")),
+          );
+        } else if (state is FirebaseError) {
+          ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+            SnackBar(content: Text("Error: ${state.message}")),
+          );
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Center(
+            child: Text(
+              'Make Your Record',
+              style: TextStyle(
+                  fontWeight: FontWeight.bold, color: appcolors.primarycolor),
             ),
           ),
-        );
+          actions: [
+            PopupMenuButton<VoidCallback>(onSelected: (callback) {
+              callback();
+            }, itemBuilder: (context) {
+              return [
+                PopupMenuItem(
+                  child: const Text('Developer contact'),
+                  value: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => const dev()));
+                  },
+                ),
+                PopupMenuItem(
+                    child: const Text('log Out'),
+                    value: () {
+                      //To do add firebase logout .
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const Signup()),
+                      );
+                    })
+              ];
+            })
+          ],
+        ),
+        body: Form(
+          autovalidateMode: AutovalidateMode.always,
+          key: _formkey,
+          child: SingleChildScrollView(
+            child: Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                    image: AssetImage(bodyimage), fit: BoxFit.cover),
+              ),
+              child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    UpperHeading(context),
+                    TextFieldFiveHundred(context),
+                    TextFieldTwoHundred(context),
+                    TextFieldHundred(context),
+                    TextFieldFifty(context),
+                    TextFieldTwenty(context),
+                    TextFieldTen(context),
+                    remarktextfield(),
+                    const SizedBox(
+                      height: 10,
+                      width: 30,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        DepositBtn(context),
+                        const SizedBox(
+                          height: 30,
+                          width: 30,
+                        ),
+                        WithdrawlBtn(context),
+                        const SizedBox(
+                          height: 30,
+                          width: 30,
+                        ),
+                        ReciptBtn(context),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    // const Center(child:Text('Developed by Kaushal Kishore sharma \nContact me on: shadowcode007@gmail.com',style: TextStyle(color: Colors.black,fontSize: 30,fontWeight: FontWeight.bold),))
+                  ]),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void saveData() async {
@@ -649,7 +649,7 @@ class MainAppState extends State<MainApp> {
           await prefs.setString('totalmoney', widget.totalmoney.toString());
           await prefs.setString('recieptno', widget.recieptno.toString());
 
- String? rec =await prefs.getString('recieptno');
+          String? rec = prefs.getString('recieptno');
 
           _textController10.clear();
           _textController20.clear();
@@ -675,9 +675,10 @@ class MainAppState extends State<MainApp> {
             'twohundred': twohundred,
             'fivehundred': fivehundred,
             'total': totalDepositnotes,
-            'totalMoney': totalDepositAmount,
+            'totalmoney': totalDepositAmount,
             'recieptno': rec,
-            'remark': tt,  'createdAt': FieldValue.serverTimestamp()
+            'remark': tt,
+            'createdAt': FieldValue.serverTimestamp()
           };
 
           BlocProvider.of<FirebaseBloc>(context).add(AddDataEvent(data));
@@ -772,7 +773,7 @@ class MainAppState extends State<MainApp> {
             await prefs.setString('totalmoney', widget.totalmoney.toString());
             await prefs.setString('recieptno', widget.recieptno.toString());
 
-            String? rec =await prefs.getString('recieptno');
+            String? rec = prefs.getString('recieptno');
 
             _textController10.clear();
             _textController20.clear();
@@ -797,9 +798,10 @@ class MainAppState extends State<MainApp> {
               'twohundred': twohundred,
               'fivehundred': fivehundred,
               'total': totalwithdrawlnotes,
-              'totalMoney': totalWithdrawlAmount,
+              'totalmoney': totalWithdrawlAmount,
               'recieptno': rec,
-              'remark': tt,  'createdAt': FieldValue.serverTimestamp()
+              'remark': tt,
+              'createdAt': FieldValue.serverTimestamp()
             };
 
             BlocProvider.of<FirebaseBloc>(context).add(AddDataEvent(data));
@@ -919,4 +921,3 @@ class MainAppState extends State<MainApp> {
     );
   }
 }
-

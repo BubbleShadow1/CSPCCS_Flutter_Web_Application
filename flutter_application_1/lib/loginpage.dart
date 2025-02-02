@@ -5,7 +5,6 @@ import 'package:flutter_application_1/firebasedatabase/bloc/state.dart';
 import 'package:flutter_application_1/firebasedatabase/bloc/storedatabloc.dart';
 import 'package:flutter_application_1/firebasedatabase/firebaserepo.dart';
 import 'package:flutter_application_1/homepage.dart';
-import 'package:flutter_application_1/main.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -36,6 +35,10 @@ class LoginpageState extends State<Loginpage> {
   String value100 = "";
   String value200 = "";
   String value500 = "";
+  String remark = "";
+  String recieptno = "";
+  String loss = "";
+  String profit = "";
 
   String text10 = "";
   String text20 = "";
@@ -47,44 +50,40 @@ class LoginpageState extends State<Loginpage> {
   final _formKey = GlobalKey<FormState>();
 
   Future<void> firsttimeornot() async {
-  final prefs = await SharedPreferences.getInstance();
-  String? username = prefs.getString('username');
+    final prefs = await SharedPreferences.getInstance();
+    String? username = prefs.getString('username');
 
-  // if (username == null) {
-  //   // Handle missing username gracefully.
-  //   ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-  //     const SnackBar(content: Text("No username found!")),
-  //   );
-  //   return;
-  // }
+    // if (username == null) {
+    //   // Handle missing username gracefully.
+    //   ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+    //     const SnackBar(content: Text("No username found!")),
+    //   );
+    //   return;
+    // }
 
-  final isFirstTime = await FirebaseRepository().isFirstTimeLogin(username!);
-  if (isFirstTime) {
-    // First-time login, add data to Firebase
-    // Map<String, dynamic> initialData = {
-    //   'ten': 0,
-    //   'twenty': 0,
-    //   'fifty': 0,
-    //   'hundred': 0,
-    //   'twohundred': 0,
-    //   'fivehundred': 0,
-    //   'total': 0,
-    //   'totalMoney': 0,
-    // };
-  
-  BlocProvider.of<FirebaseBloc>(context).add(FetchUsersEvent());
+    final isFirstTime = await FirebaseRepository().isFirstTimeLogin(username!);
+    if (isFirstTime) {
+      // First-time login, add data to Firebase
+      // Map<String, dynamic> initialData = {
+      //   'ten': 0,
+      //   'twenty': 0,
+      //   'fifty': 0,
+      //   'hundred': 0,
+      //   'twohundred': 0,
+      //   'fivehundred': 0,
+      //   'total': 0,
+      //   'totalMoney': 0,
+      // };
 
+      BlocProvider.of<FirebaseBloc>(context).add(FetchUsersEvent());
 
-     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(content: Text("Already a user ! Data fetched Successfully")),
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        const SnackBar(
+            content: Text("Already a user ! Data fetched Successfully")),
       );
-
-  } else {
-  
- 
-  
+    } else {}
   }
-}
+
   @override
   void initState() {
     super.initState();
@@ -100,45 +99,50 @@ class LoginpageState extends State<Loginpage> {
     double scaleFactor = screenWidth > 800 ? 0.5 : 1.0;
 
     return BlocListener<FirebaseBloc, FirebaseState>(
-  listener: (context, state) {
-    if (state is FirebaseLoading) {
-      
-    } else if (state is UsersFetchedState) {
-      final data = state.users;
+        listener: (context, state) {
+          if (state is FirebaseLoading) {
+          } else if (state is UsersFetchedState) {
+            final data = state.users;
 
-      if (data != null && data.isNotEmpty) {
-        final user = data.last; // Assuming `data` is a list and you need the first user's data
-        setState(() {
-          value10 = user['ten']?.toString() ?? '0';
-          value20 = user['twenty']?.toString() ?? '0';
-          value50 = user['fifty']?.toString() ?? '0';
-          value100 = user['hundred']?.toString() ?? '0';
-          value200 = user['twohundred']?.toString() ?? '0';
-          value500 = user['fivehundred']?.toString() ?? '0';
+            if (data.isNotEmpty) {
+              final user = data
+                  .last; 
+              setState(() {
+                
+                value10 = user['ten']?.toString() ?? '0';
+                value20 = user['twenty']?.toString() ?? '0';
+                value50 = user['fifty']?.toString() ?? '0';
+                value100 = user['hundred']?.toString() ?? '0';
+                value200 = user['twohundred']?.toString() ?? '0';
+                value500 = user['fivehundred']?.toString() ?? '0';
+                 remark = user['remark']?.toString() ?? '0';
+                  recieptno = user['recieptno']?.toString() ?? '0';
+                   loss = user['loss']?.toString() ?? '0';
+                    profit = user['profit']?.toString() ?? '0';
 
-          // Populate TextEditingController values
-          ec10.text = value10;
-          ec20.text = value20;
-          ec50.text = value50;
-          ec100.text = value100;
-          ec200.text = value200;
-          ec500.text = value500;
-        });
-      }
+                // Populate TextEditingController values
+                ec10.text = value10;
+                ec20.text = value20;
+                ec50.text = value50;
+                ec100.text = value100;
+                ec200.text = value200;
+                ec500.text = value500;
+              });
+            }
 
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(content: Text("Data fetched successfully!")),
-      );
-    } else if (state is FirebaseSuccess) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(content: Text("Data stored successfully!")),
-      );
-    } else if (state is FirebaseError) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text("Error: ${state.message}")),
-      );
-    }
-  },
+            // ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+            //   const SnackBar(content: Text("Data fetched successfully!")),
+            // );
+          } else if (state is FirebaseSuccess) {
+            // ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+            //   const SnackBar(content: Text("Data stored successfully!")),
+            // );
+          } else if (state is FirebaseError) {
+            ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+              SnackBar(content: Text("Error: ${state.message}")),
+            );
+          }
+        },
         child: Scaffold(
           appBar: AppBar(
             backgroundColor: Colors.orange,
@@ -359,13 +363,14 @@ class LoginpageState extends State<Loginpage> {
               hundred * 100 +
               fivehundred * 500 +
               twohundred * 200;
+              
           int total = ten + twenty + fifty + hundred + fivehundred + twohundred;
 
           final prefs = await SharedPreferences.getInstance();
           String? username = prefs.getString('username');
           print('$username at the loginpage');
           await prefs.setString(
-              '${username}login', '***********RECIEPT***********');
+              '${username}login',remark);
 
           await prefs.setString('ten', ten.toString());
           await prefs.setString('twenty', twenty.toString());
@@ -375,7 +380,8 @@ class LoginpageState extends State<Loginpage> {
           await prefs.setString('fivehundred', fivehundred.toString());
           await prefs.setString('total', total.toString());
           await prefs.setString('totalmoney', totalMoney.toString());
-          await prefs.setString('recieptno', '1');
+          await prefs.setString('recieptno', recieptno);
+
 
 //firsttime open or not state saved in sharedpreference.
 
@@ -389,16 +395,29 @@ class LoginpageState extends State<Loginpage> {
             'twohundred': twohundred,
             'fivehundred': fivehundred,
             'total': total,
-            'totalMoney': totalMoney,  'createdAt': FieldValue.serverTimestamp()
+            'totalmoney': totalMoney,
+            'recieptno': recieptno,
+            'remark': remark,
+            'loss': loss,
+            'profit': profit,
+            'createdAt': FieldValue.serverTimestamp()
           };
 
-    
+          BlocProvider.of<FirebaseBloc>(context).add(AddDataEvent(data));
 
-BlocProvider.of<FirebaseBloc>(context).add(AddDataEvent(data));
- 
-
-            Navigator.push(context, MaterialPageRoute(builder:(context)=>HomePage(ten:ten, twenty: twenty, fifty: fifty, hundred: hundred, twohundred: twohundred, fivehundred: fivehundred, totalmoney: totalMoney, total: total, recieptno: 1) ));
-
+          Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => HomePage(
+                      ten: ten,
+                      twenty: twenty,
+                      fifty: fifty,
+                      hundred: hundred,
+                      twohundred: twohundred,
+                      fivehundred: fivehundred,
+                      totalmoney: totalMoney,
+                      total: total,
+                      recieptno: int.parse(recieptno))));
         }
       },
       style: ElevatedButton.styleFrom(
